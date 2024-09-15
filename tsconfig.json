@@ -39,7 +39,6 @@
     "./node_modules/**/*",
     "e2e/**/*.ts"
   ],
-  "extends": "expo/tsconfig.base",
   "include": [
     "**/*.ts",
     "**/*.tsx",

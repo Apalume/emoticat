@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, Image, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, SafeAreaView } from 'react-native';
+import { Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, SafeAreaView } from 'react-native';
 import { Link } from 'expo-router';
 
 
@@ -7,16 +7,11 @@ import GoogleIcon from '@assets/icons/google.svg';
 import AppleIcon from '@assets/icons/apple.svg';
 import CatFace from '@assets/icons/cat-face.svg';
 
-export const index = () => {
-  const isEmailValid = email.trim().length > 0;
+export const Login = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [email, setEmail] = useState('');
-  const dispatch = useAppDispatch();
 
-  const handleLogin = () => {
-    dispatch(login('user@example.com'));
-    // Navigate to dashboard or perform other actions
-  };
+  const isEmailValid = email.trim().length > 0;
 
   return (
   <SafeAreaView className="flex-1 bg-[#060606]">

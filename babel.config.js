@@ -9,11 +9,11 @@ module.exports = function(api) {
           root: ['./'],
           alias: {
             '@': './',
+            '@assets': './assets',
           },
         },
       ],
-    "nativewind/babel",
-    'react-native-svg-transformer',
+      "nativewind/babel",
     ],
   };
 };
