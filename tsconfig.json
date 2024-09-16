@@ -32,7 +32,9 @@
       "@/*": [
         "src/*"
       ],
-      "@assets/*": ["assets/*"]
+      "@assets/*": [
+        "assets/*"
+      ]
     }
   },
   "exclude": [
@@ -44,5 +46,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
