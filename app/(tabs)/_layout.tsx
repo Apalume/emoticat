@@ -22,7 +22,7 @@ export default function TabLayout() {
                 tabBarItemStyle: {
                     padding: 12,
                     marginHorizontal: 24,
-                    borderRadius: 50,
+                    borderRadius: 20,
                     width: 'auto',
                 },
                 tabBarActiveBackgroundColor: '#FBF79C',

@@ -21,13 +21,7 @@ interface PetState {
 }
 
 const initialState: PetState = {
-  pets: [{
-    coverPicture: null,
-    name: 'Muna',
-    birthday: null,
-    breed: null,
-    emotionHistory: [],
-  }]
+  pets: []
 };
 
 const petSlice = createSlice({
@@ -54,6 +48,6 @@ const petSlice = createSlice({
   },
 });
 
-export const { updatePetInfo, addEmotionRecord, clearEmotionHistory } = petSlice.actions;
+export const { updatePetInfo, addEmotionRecord, clearEmotionHistory, addPet, removePet } = petSlice.actions;
 
 export default petSlice.reducer;

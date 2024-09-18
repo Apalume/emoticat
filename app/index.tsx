@@ -33,19 +33,19 @@ const index = () => {
             >
               <View className="flex-1 justify-center items-center p-4">
                 <View className="flex-row items-center gap-2 mb-8">
-                  <View className={`bg-[#FFFC9F] py-6 px-2 rounded-full`}>
+                  <View className={`bg-[#FFFC9F] py-6 px-2 rounded-2xl`}>
                     <CatFace width={66} height={30} />
                   </View>
                   <Text className="text-white text-3xl font-bold">EmotiCat</Text>
                 </View>
 
                 <View className="w-full max-w-sm">
-                  <TouchableOpacity className="bg-[#383838] flex-row items-center justify-center p-4 rounded-full mb-4">
+                  <TouchableOpacity className="bg-[#383838] flex-row items-center justify-center p-4 rounded-2xl mb-4">
                     <GoogleIcon width={24} height={24} />
                     <Text className="text-white ml-2">Continue with Google</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity className="bg-[#383838] flex-row items-center justify-center p-4 rounded-full mb-4">
+                  <TouchableOpacity className="bg-[#383838] flex-row items-center justify-center p-4 rounded-2xl mb-4">
                     <AppleIcon width={24} height={24} />
                     <Text className="text-white ml-2">Continue with Apple</Text>
                   </TouchableOpacity>
@@ -54,7 +54,7 @@ const index = () => {
 
                   <View>
                     <TextInput 
-                      className={`bg-[#383838] text-white p-4 rounded-full mb-4 ${
+                      className={`bg-[#383838] text-white p-4 rounded-2xl mb-4 ${
                         isFocused ? 'border-[#FBF79C] border-2' : 'border-transparent border-2'
                       }`}
                       placeholder="Enter your email address"
@@ -67,12 +67,12 @@ const index = () => {
 
                     {isEmailValid ? (
                       <Link href='/dashboard' asChild replace>
-                        <TouchableOpacity className="bg-[#FBF79C] p-4 rounded-full">
+                        <TouchableOpacity className="bg-[#FBF79C] p-4 rounded-2xl">
                           <Text className="text-black text-center">Continue with Email</Text>
                         </TouchableOpacity>
                       </Link>
                     ) : (
-                      <View className="bg-[#1C1C1C] p-4 rounded-full">
+                      <View className="bg-[#1C1C1C] p-4 rounded-2xl">
                         <Text className="text-[#8D8D8D] text-center">Continue with Email</Text>
                       </View>
                     )}

@@ -1,12 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import petReducer from './petSlice';
+import cameraReducer from './cameraFlowSlice';
 
 const store = configureStore({
   reducer: {
     auth: authReducer,
     pet: petReducer,
-    // ... other reducers
+    cameraFlow: cameraReducer,
   },
 });
 

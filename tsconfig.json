@@ -3,6 +3,7 @@
     "lib": [
       "es6"
     ],
+    "typeRoots": ["./types"],
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
