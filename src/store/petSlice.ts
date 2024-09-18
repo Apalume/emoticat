@@ -8,7 +8,7 @@ interface EmotionRecord {
   timestamp: number;
 }
 
-interface PetState {
+interface Pet {
   coverPicture: string | null;
   name: string;
   birthday: string | null;
@@ -16,26 +16,40 @@ interface PetState {
   emotionHistory: EmotionRecord[];
 }
 
+interface PetState {
+  pets: Pet[];
+}
+
 const initialState: PetState = {
-  coverPicture: null,
-  name: 'Muna',
-  birthday: null,
-  breed: null,
-  emotionHistory: [],
+  pets: [{
+    coverPicture: null,
+    name: 'Muna',
+    birthday: null,
+    breed: null,
+    emotionHistory: [],
+  }]
 };
 
 const petSlice = createSlice({
   name: 'pet',
   initialState,
   reducers: {
-    updatePetInfo: (state, action: PayloadAction<Partial<PetState>>) => {
-      return { ...state, ...action.payload };
+    updatePetInfo: (state, action: PayloadAction<{ index: number; pet: Partial<Pet> }>) => {
+      const { index, pet } = action.payload;
+      state.pets[index] = { ...state.pets[index], ...pet };
     },
-    addEmotionRecord: (state, action: PayloadAction<EmotionRecord>) => {
-      state.emotionHistory.unshift(action.payload);
+    addEmotionRecord: (state, action: PayloadAction<{ index: number; record: EmotionRecord }>) => {
+      const { index, record } = action.payload;
+      state.pets[index].emotionHistory.unshift(record);
     },
-    clearEmotionHistory: (state) => {
-      state.emotionHistory = [];
+    clearEmotionHistory: (state, action: PayloadAction<number>) => {
+      state.pets[action.payload].emotionHistory = [];
+    },
+    addPet: (state, action: PayloadAction<Pet>) => {
+      state.pets.push(action.payload);
+    },
+    removePet: (state, action: PayloadAction<number>) => {
+      state.pets.splice(action.payload, 1);
     },
   },
 });

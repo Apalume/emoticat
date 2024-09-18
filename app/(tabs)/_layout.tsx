@@ -10,7 +10,7 @@ export default function TabLayout() {
 
   return (
         <Tabs
-            initialRouteName="dashboard/index"
+            initialRouteName="dashboard"
             screenOptions={({ route }) => ({
                 tabBarStyle: { 
                     paddingTop: 8, 
@@ -29,7 +29,7 @@ export default function TabLayout() {
             })}
         >
             <Tabs.Screen
-                name="dashboard/index"
+                name="dashboard"
                 options={{
                     tabBarIcon: ({ focused, color, size }) => (
                         <HomeIcon width={size} height={size} fill={focused ? `#FBF79C`: `#1D1D1D` } stroke={focused ? '#000000' : '#FFFFFF'} />

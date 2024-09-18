@@ -175,7 +175,7 @@ export default function Camera() {
         {analyzing ? (
           <View className="items-center">
             <ActivityIndicator size="large" color="#FBF79C" />
-            <Text className="mt-5 text-white">Analyzing your cat 🐈...</Text>
+            <Text className="mt-5 text-white">Analyzing your cats emeowtion 🐈...</Text>
           </View>
         ) : image ? (
           <ScrollView className="w-full flex gap-4 p-4" contentContainerStyle={{ alignItems: 'center', paddingVertical: 20 }}>

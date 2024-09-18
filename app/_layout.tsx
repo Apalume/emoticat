@@ -66,7 +66,6 @@ function RootLayoutNav() {
           >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="pet-history" options={{ headerShown: false }} />
       </Stack>
         </ThemeProvider>
       </SafeAreaProvider>
