@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Platform, Image, TouchableWithoutFeedback, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform, Image, TouchableWithoutFeedback, KeyboardAvoidingView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { useAppDispatch } from '@/src/store/hooks';
-import { addPet } from '@/src/store/petSlice';
 import { Modal as RNModal } from 'react-native';
+import { addPet } from '@/src/api/catApi';
 
 export default function ModalScreen({ visible, onClose }) {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
+  
   const [modalVisible, setModalVisible] = useState(visible);
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState(new Date());
@@ -34,25 +34,21 @@ export default function ModalScreen({ visible, onClose }) {
     }
   };
 
-  const handleSave = () => {
-    if (!image) {
-      alert("Please provide a pet picture.");
-      return;
+  const handleSave = async () => {
+    try {
+      const petData = {
+        name,
+        breed,
+        birthday: birthday.toISOString(),
+        image,
+      };
+      await addPet(petData);
+      Alert.alert('Success', 'Pet added successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error adding pet:', error);
+      Alert.alert('Error', `Failed to add pet: ${error.message}`);
     }
-    if (!name.trim()) {
-      alert("Please provide a pet name.");
-      return;
-    }
-    
-    const newPet = {
-      coverPicture: image,
-      name: name.trim(),
-      birthday: birthday.toISOString(),
-      breed: breed.trim() || null,
-      emotionHistory: [],
-    };
-    dispatch(addPet(newPet));
-    onClose();
   };
   
 

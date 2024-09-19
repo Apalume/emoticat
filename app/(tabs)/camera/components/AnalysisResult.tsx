@@ -44,6 +44,8 @@ export default function AnalysisResult() {
     }
   }, [analysisResult, emotionDetails, selectedPet, image, dispatch]);
   
+  if (!analysisResult) return null;
+
   return (
     <View className="flex-1">
       <ScrollView className="w-full flex-1 p-4 flex gap-2">

@@ -45,9 +45,11 @@ const petSlice = createSlice({
     removePet: (state, action: PayloadAction<number>) => {
       state.pets.splice(action.payload, 1);
     },
+    setAllPets: (state, action: PayloadAction<Pet[]>) => {
+      state.pets = action.payload;
+    },
   },
 });
 
-export const { updatePetInfo, addEmotionRecord, clearEmotionHistory, addPet, removePet } = petSlice.actions;
-
+export const { updatePetInfo, addEmotionRecord, clearEmotionHistory, addPet, removePet, setAllPets } = petSlice.actions;
 export default petSlice.reducer;

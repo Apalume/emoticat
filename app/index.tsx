@@ -1,21 +1,59 @@
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, SafeAreaView } from 'react-native';
-import { Link } from 'expo-router';
+import { Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { router } from 'expo-router';
 import { useAppDispatch } from '@/src/store/hooks';
+import { login, register } from '@/src/api/catApi';
+
+import { setUser } from '@/src/store/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import GoogleIcon from '@assets/icons/google.svg';
 import AppleIcon from '@assets/icons/apple.svg';
 import CatFace from '@assets/icons/cat-face.svg';
+import ViewIcon from '@assets/icons/view.svg';
 
 const index = () => {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [email, setEmail] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const dispatch = useAppDispatch();
   const isEmailValid = email.trim().length > 0;
 
-  const handleLogin = () => {
-    dispatch(login('user@example.com'));
-    // Navigate to dashboard or perform other actions
+  const handleLogin = async () => {
+    try {
+      const { token, username } = await login(email, password);
+      await AsyncStorage.setItem('userToken', token);
+      dispatch(setUser({ username, token }));
+      router.replace('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Login Error', error.message || 'An unknown error occurred');
+    }
+  };
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    try {
+      const result = await register(email, email, password);
+      if (result && result.token) {
+        await AsyncStorage.setItem('userToken', result.token);
+        dispatch(setUser({ username: result.username || email, token: result.token }));
+        router.replace('/dashboard');
+      } else {
+        throw new Error('Registration failed: No token received');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert('Error', 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -51,33 +89,81 @@ const index = () => {
                   </TouchableOpacity>
 
                   <Text className="text-white text-center my-4">OR</Text>
-
                   <View>
                     <TextInput 
                       className={`bg-[#383838] text-white p-4 rounded-2xl mb-4 ${
-                        isFocused ? 'border-[#FBF79C] border-2' : 'border-transparent border-2'
+                        isEmailFocused ? 'border-[#FBF79C] border-2' : 'border-transparent border-2'
                       }`}
                       placeholder="Enter your email address"
                       placeholderTextColor="#8D8D8D"
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
+                      onFocus={() => setIsEmailFocused(true)}
+                      onBlur={() => setIsEmailFocused(false)}
                       onChangeText={setEmail}
                       value={email}
                     />
-
-                    {isEmailValid ? (
-                      <Link href='/dashboard' asChild replace>
-                        <TouchableOpacity className="bg-[#FBF79C] p-4 rounded-2xl">
-                          <Text className="text-black text-center">Continue with Email</Text>
+                    <View className="relative">
+                      <TextInput 
+                        className={`bg-[#383838] text-white p-4 rounded-2xl mb-4 ${
+                          isPasswordFocused ? 'border-[#FBF79C] border-2' : 'border-transparent border-2'
+                        }`}
+                        placeholder="Enter your password"
+                        placeholderTextColor="#8D8D8D"
+                        onFocus={() => setIsPasswordFocused(true)}
+                        onBlur={() => setIsPasswordFocused(false)}
+                        onChangeText={setPassword}
+                        value={password}
+                        secureTextEntry={!showPassword}
+                      />
+                      <TouchableOpacity 
+                        className="absolute right-4 top-4"
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        <ViewIcon width={24} height={24} />
+                      </TouchableOpacity>
+                    </View>
+                    {isRegistering && (
+                      <View className="relative">
+                        <TextInput 
+                          className={`bg-[#383838] text-white p-4 rounded-2xl mb-4 ${
+                            isPasswordFocused ? 'border-[#FBF79C] border-2' : 'border-transparent border-2'
+                          }`}
+                          placeholder="Confirm your password"
+                          placeholderTextColor="#8D8D8D"
+                          onFocus={() => setIsPasswordFocused(true)}
+                          onBlur={() => setIsPasswordFocused(false)}
+                          onChangeText={setConfirmPassword}
+                          value={confirmPassword}
+                          secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity 
+                          className="absolute right-4 top-4"
+                          onPress={() => setShowPassword(!showPassword)}
+                        >
+                          <ViewIcon width={24} height={24} />
                         </TouchableOpacity>
-                      </Link>
-                    ) : (
-                      <View className="bg-[#1C1C1C] p-4 rounded-2xl">
-                        <Text className="text-[#8D8D8D] text-center">Continue with Email</Text>
                       </View>
                     )}
+                    {isEmailValid ? (
+                      <TouchableOpacity 
+                        className="bg-[#FBF79C] p-4 rounded-2xl mb-4" 
+                        onPress={isRegistering ? handleRegister : handleLogin}
+                      >
+                        <Text className="text-black text-center">
+                          {isRegistering ? 'Register' : 'Continue with Email'}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View className="bg-[#1C1C1C] p-4 rounded-2xl mb-4">
+                        <Text className="text-[#8D8D8D] text-center">Enter a valid email & pass</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity onPress={() => setIsRegistering(!isRegistering)}>
+                      <Text className="text-[#FBF79C] text-center">
+                        {isRegistering ? 'Already have an account? Login' : 'Don\'t have an account? Register'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
-                </View>
+                  </View>
               </View>
             </ScrollView>
             
