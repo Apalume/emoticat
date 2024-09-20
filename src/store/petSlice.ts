@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface EmotionRecord {
-  image: string;
+  image_key: string; // Add this line
   emotion: string;
   emotionText: string;
   tipsAndRecs: string[];
@@ -9,7 +9,8 @@ interface EmotionRecord {
 }
 
 interface Pet {
-  coverPicture: string | null;
+  id: number;
+  image_key: string | null; // Changed from imageKey to image_key
   name: string;
   birthday: string | null;
   breed: string | null;
@@ -32,9 +33,15 @@ const petSlice = createSlice({
       const { index, pet } = action.payload;
       state.pets[index] = { ...state.pets[index], ...pet };
     },
-    addEmotionRecord: (state, action: PayloadAction<{ index: number; record: EmotionRecord }>) => {
-      const { index, record } = action.payload;
-      state.pets[index].emotionHistory.unshift(record);
+    addEmotionRecord: (state, action: PayloadAction<{ petId: number; record: EmotionRecord }>) => {
+      const { petId, record } = action.payload;
+      const pet = state.pets.find(p => p.id === petId);
+      if (pet) {
+        if (!pet.emotionHistory) {
+          pet.emotionHistory = [];
+        }
+        pet.emotionHistory.unshift(record);
+      }
     },
     clearEmotionHistory: (state, action: PayloadAction<number>) => {
       state.pets[action.payload].emotionHistory = [];

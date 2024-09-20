@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { useAppSelector } from '@/src/store/hooks';
-import { useDispatch } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
 import { setStage, setImage, setAnalysisResult, setEmotionDetails } from '@/src/store/cameraFlowSlice';
 import { addEmotionRecord } from '@/src/store/petSlice';
 
 export default function AnalysisResult() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { image, analysisResult, emotionDetails, analysisTimestamp, selectedPet } = useAppSelector(state => state.cameraFlow);
   const pets = useAppSelector(state => state.pet.pets);
+
   const handleNewPicture = () => {
     dispatch(setImage(null));
     dispatch(setAnalysisResult(null));

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
+import { useAppDispatch } from '@/src/store/hooks';
 import { View, Text, TextInput, TouchableOpacity, Platform, Image, TouchableWithoutFeedback, KeyboardAvoidingView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { Modal as RNModal } from 'react-native';
-import { addPet } from '@/src/api/catApi';
+import { addPet as addPetApi } from '@/src/api/catApi';
+import { addPet } from '@/src/store/petSlice';
 
 export default function ModalScreen({ visible, onClose }) {
-  const dispatch = useDispatch();
-  
+  const dispatch = useAppDispatch();
   const [modalVisible, setModalVisible] = useState(visible);
   const [name, setName] = useState('');
   const [birthday, setBirthday] = useState(new Date());
@@ -25,32 +27,51 @@ export default function ModalScreen({ visible, onClose }) {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      // Resize and compress the image
+      const manipResult = await manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 1000 } }],
+        { compress: 0.8, format: SaveFormat.JPEG }
+      );
+      setImage(manipResult.uri);
     }
   };
 
   const handleSave = async () => {
     try {
+      if (!image) {
+        Alert.alert('Error', 'Please select an image');
+        return;
+      }
+  
       const petData = {
         name,
         breed,
         birthday: birthday.toISOString(),
         image,
       };
-      await addPet(petData);
-      Alert.alert('Success', 'Pet added successfully');
-      onClose();
+  
+      const response = await addPetApi(petData);
+      
+      if (response && response.pet && response.pet.image_key) {
+        // Dispatch the addPet action with the pet data
+        dispatch(addPet(response.pet));
+        
+        Alert.alert('Success', 'Pet added successfully');
+        onClose();
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       console.error('Error adding pet:', error);
       Alert.alert('Error', `Failed to add pet: ${error.message}`);
     }
   };
-  
 
   return (
     <RNModal

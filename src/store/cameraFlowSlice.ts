@@ -4,7 +4,7 @@ import { getEmotionEmoji } from '../utils/emotionUtils';
 
 interface CameraFlowState {
   stage: 'petSelection' | 'imageCapture' | 'analysisResult';
-  selectedPet: number | null;
+  selectedPet: number | null; // This now represents the pet's ID
   image: string | null;
   analyzing: boolean;
   analysisResult: any;
@@ -24,11 +24,15 @@ const initialState: CameraFlowState = {
 
 export const analyzeImage = createAsyncThunk(
   'cameraFlow/analyzeImage',
-  async (base64Image: string, { dispatch, rejectWithValue }) => {
+  async ({ image, petId }: { image: string; petId: number | undefined }, { dispatch, rejectWithValue }) => {
     dispatch(setAnalyzing(true));
     dispatch(setAnalysisTimestamp(new Date().toISOString()));
     try {
-      const data = await analyzeCat(base64Image);
+      console.log(`in analyzeImage for ${petId}`)
+      if (petId === undefined) {
+        throw new Error('No pet selected');
+      }
+      const data = await analyzeCat(image, petId);
       if (!data.message.startsWith('ERROR:')) {
         const emotionDetails = await getEmotionDetails(data.message);
         return { analysisResult: data, emotionDetails };

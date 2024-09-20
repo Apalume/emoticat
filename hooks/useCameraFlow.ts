@@ -2,42 +2,16 @@ import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { useAppSelector } from '@/src/store/hooks';
-import { addEmotionRecord } from '@/src/store/petSlice';
 import {
   setStage,
   setSelectedPet,
   setImage,
-  setAnalyzing,
   setAnalysisResult,
   setEmotionDetails,
-  setAnalysisTimestamp,
 } from '@/src/store/cameraFlowSlice';
-import { RootState } from '@/store';
-
-const url = process.env.EXPO_PUBLIC_API_URL;
 
 export function useCameraFlow() {
   const dispatch = useDispatch();
-  const petName = useAppSelector((state: RootState) => state.pet.name);
-
-  const emotionEmojiMap = {
-    "Content": "😺",
-    "Happy": "😸",
-    "Curious": "🐱",
-    "Affectionate": "😽",
-    "Scared": "🙀",
-    "Aggressive": "😾",
-    "Annoyed": "😼",
-    "Anxious": "😿",
-    "Sad": "😿",
-    "Bored": "🐈",
-    "Sleepy": "😴"
-  };
-  
-  const getEmotionEmoji = useCallback((emotion) => {
-    return emotionEmojiMap[emotion] || '🐱';
-  }, []);
 
   const compressAndResizeImage = useCallback(async (uri) => {
     const manipulatedImage = await ImageManipulator.manipulateAsync(

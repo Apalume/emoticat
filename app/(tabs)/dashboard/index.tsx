@@ -1,27 +1,37 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { Link } from 'expo-router';
-import { useAppSelector } from '@/src/store/hooks';
+import React, { useState, useCallback, useEffect } from 'react';
+import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
+import { setAllPets } from '@/src/store/petSlice';
+import { getAllPets } from '@/src/api/catApi';
 import ModalScreen from './modal';
+import { PetItem } from './petItem';
 
 const Dashboard = () => {
   const pets = useAppSelector((state) => state.pet.pets);
+  const dispatch = useAppDispatch();
+  const [refreshing, setRefreshing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const calculateAge = (birthday) => {
-    if (!birthday) return 'Unknown';
-    const ageDifMs = Date.now() - new Date(birthday).getTime();
-    const ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-  };
+  const fetchPets = useCallback(async (forceRefresh = false) => {
+    try {
+      const fetchedPets = await getAllPets(forceRefresh);
+      dispatch(setAllPets(fetchedPets));
+    } catch (error) {
+      console.error('Error fetching pets:', error);
+      // Optionally, show an error message to the user
+    }
+  }, [dispatch]);
 
-  const getRecentMood = (pet) => {
-    if (!pet.emotionHistory || pet.emotionHistory.length === 0) return 'No mood data';
-    const latestMood = pet.emotionHistory[0];
-    const timeDiff = Date.now() - new Date(latestMood.timestamp).getTime();
-    const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
-    return `${latestMood.emotion} (${hoursAgo} hours ago)`;
-  };
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchPets(true); // Force refresh from server
+    setRefreshing(false);
+  }, [fetchPets]);
+  
+
+  useEffect(() => {
+    onRefresh();
+  }, [onRefresh]);
 
   return (
     <SafeAreaView className="flex-1 bg-[#060606]">
@@ -33,7 +43,12 @@ const Dashboard = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1 px-4">
+      <ScrollView 
+        className="flex-1 px-4"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Text className="text-white text-2xl font-bold my-4">Dashboard</Text>
         <View className="mb-6">
           <View className="flex-row justify-between items-center mb-2">
@@ -51,20 +66,7 @@ const Dashboard = () => {
             </Text>
           ) : (
             pets.map((pet, index) => (
-              <Link key={index} href={`/dashboard/pet-history?index=${index}`} asChild>
-                <TouchableOpacity className="flex-row my-4 bg-[#1D1D1D] p-4 rounded-2xl">
-                  <Image 
-                    source={{ uri: pet.coverPicture || 'https://placekitten.com/200/200' }} 
-                    className="w-20 h-20 rounded-2xl mr-4"
-                  />
-                  <View>
-                    <Text className="text-white text-xl font-bold">{pet.name}</Text>
-                    <Text className="text-white">Age: {calculateAge(pet.birthday)}</Text>
-                    <Text className="text-white">Breed: {pet.breed || 'Unknown'}</Text>
-                    <Text className="text-white">Recent mood: {getRecentMood(pet)}</Text>
-                  </View>
-                </TouchableOpacity>
-              </Link>
+              <PetItem key={pet.id} pet={pet} index={index} />
             ))
           )}
         </View>

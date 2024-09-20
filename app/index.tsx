@@ -37,19 +37,15 @@ const index = () => {
   };
 
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
     try {
-      const result = await register(email, email, password);
-      if (result && result.token) {
-        await AsyncStorage.setItem('userToken', result.token);
-        dispatch(setUser({ username: result.username || email, token: result.token }));
-        router.replace('/dashboard');
-      } else {
-        throw new Error('Registration failed: No token received');
+      if (password !== confirmPassword) {
+        Alert.alert('Error', 'Passwords do not match');
+        return;
       }
+      const result = await register(email, email, password);
+      await AsyncStorage.setItem('userToken', result.token);
+      dispatch(setUser({ username: result.username, token: result.token }));
+      router.replace('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       Alert.alert('Error', 'Registration failed. Please try again.');

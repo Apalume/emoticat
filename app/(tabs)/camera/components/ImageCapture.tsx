@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { useAppSelector } from '@/src/store/hooks';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
 import { setStage, setImage, analyzeImage } from '@/src/store/cameraFlowSlice';
 import { RootState } from '@/src/store';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { useImageLoader } from '@/hooks/useImageLoader';
 
 export default function ImageCapture() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const selectedPet = useAppSelector((state: RootState) => state.cameraFlow.selectedPet);
+  const [error, setError] = useState<string | null>(null);
+  const selectedPetId = useAppSelector((state: RootState) => state.cameraFlow.selectedPet);
   const pets = useAppSelector((state: RootState) => state.pet.pets);
+  const selectedPet = pets.find(pet => pet.id === selectedPetId);
+
+  const { imageUri, loading } = useImageLoader(selectedPet?.image_key || null);
 
   const compressAndResizeImage = async (uri: string) => {
     const manipulatedImage = await ImageManipulator.manipulateAsync(
@@ -24,6 +28,7 @@ export default function ImageCapture() {
   };
 
   const handleImageSelection = async (type: 'camera' | 'library') => {
+    setError(null);
     let result;
     if (type === 'camera') {
       result = await ImagePicker.launchCameraAsync({
@@ -46,7 +51,21 @@ export default function ImageCapture() {
       setAnalyzing(true);
       dispatch(setImage(result.assets[0].uri));
       const compressedImage = await compressAndResizeImage(result.assets[0].uri);
-      dispatch(analyzeImage(compressedImage));
+      try {
+        if (selectedPet === null) {
+          throw new Error('No pet selected');
+        }
+        console.log(`before dispatch`)
+        await dispatch(analyzeImage({ image: compressedImage, petId: selectedPetId }));
+        if (!analysisResult || analysisResult.emotion.startsWith('ERROR:')) {
+          throw new Error(analysisResult?.emotion || 'Analysis failed');
+        }
+        dispatch(setStage('analysisResult'));
+      } catch (err) {
+        setError(err.message || 'An error occurred during analysis');
+      } finally {
+        setAnalyzing(false);
+      }
     }
   };
 
@@ -62,44 +81,57 @@ export default function ImageCapture() {
   };
   
   const getRecentMood = (pet) => {
-    if (pet.emotionHistory.length === 0) return 'No mood data';
+    if (!pet.emotionHistory || pet.emotionHistory.length === 0) return 'No mood data';
     const latestMood = pet.emotionHistory[0];
     const timeDiff = Date.now() - new Date(latestMood.timestamp).getTime();
     const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
     return `${latestMood.emotion} (${hoursAgo} hours ago)`;
   };
   
-  
   if (analyzing) {
     return (
       <View className="flex-1 items-center justify-center p-4">
         <Image source={{ uri: selectedImage }} className="w-64 h-64 rounded-lg mb-4" />
-        <Text className="text-white text-lg mb-4">Analyzing your cat's emeowtion...</Text>
+        <ActivityIndicator size="large" color="#FBF79C" />
+        <Text className="text-white text-lg mb-4 mt-4">{`Analyzing your cat's emeowtion...`}</Text>
       </View>
     );
   }
 
   return (
     <View className="flex-1 items-center justify-between p-4">
-      <View className="items-center">
-        {selectedPet !== null && pets[selectedPet] && (
+      <View className="items-center w-full">
+        {selectedPet && (
           <>
-          <Text className="text-white text-xl mb-4">Selected Pet</Text>
-          <View 
-            className={`p-4 rounded-2xl flex flex-row items-center w-full bg-[#272727] mb-4 w-full`}
-          >
-            <Image
-              source={{ uri: pets[selectedPet].coverPicture || 'https://via.placeholder.com/100' }}
-              className="w-32 h-32 rounded-2xl mr-2"
-            />
-            <View>
-              <Text className="font-bold text-lg text-white">{pets[selectedPet].name}</Text>
-              <Text className="text-white">Age: {calculateAge(pets[selectedPet].birthday)}</Text>
-              <Text className="text-white">Breed: {pets[selectedPet].breed || 'Unknown'}</Text>
-              <Text className="text-white">Recent mood: {getRecentMood(pets[selectedPet])}</Text>
+            <Text className="text-white text-xl mb-4">Selected Pet</Text>
+            <View className="p-4 rounded-2xl flex flex-row items-center w-full bg-[#272727] mb-4">
+              {loading ? (
+                <View className="w-32 h-32 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                  <Text className="text-white">Loading...</Text>
+                </View>
+              ) : imageUri ? (
+                <Image
+                  source={{ uri: imageUri }}
+                  className="w-32 h-32 rounded-2xl mr-4"
+                />
+              ) : (
+                <View className="w-32 h-32 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                  <Text className="text-white">No Image</Text>
+                </View>
+              )}
+              <View>
+                <Text className="font-bold text-lg text-white">{selectedPet.name}</Text>
+                <Text className="text-white">Age: {calculateAge(selectedPet.birthday)}</Text>
+                <Text className="text-white">Breed: {selectedPet.breed || 'Unknown'}</Text>
+                <Text className="text-white">Recent mood: {getRecentMood(selectedPet)}</Text>
+              </View>
             </View>
-          </View>
           </>
+        )}
+         {error && (
+          <View className="bg-red-500 p-4 rounded-lg mb-4 w-full">
+            <Text className="text-white text-center">{error}</Text>
+          </View>
         )}
         <TouchableOpacity 
           className="bg-[#FBF79C] py-3 px-5 rounded-lg mb-4"
