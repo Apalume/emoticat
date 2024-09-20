@@ -24,7 +24,7 @@ export default function ImageCapture() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.8,
     };
 
     const result = type === 'camera' 
@@ -34,10 +34,12 @@ export default function ImageCapture() {
     if (!result.canceled) {
       setAnalyzing(true);
       try {
+        const selectedUri = result.assets[0].uri;
+        setSelectedImage(selectedUri);  // Set the selected image  
         const manipulatedImage = await ImageManipulator.manipulateAsync(
           result.assets[0].uri,
-          [{ resize: { width: 512, height: 512 } }],
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+          [{ resize: { width: 384, height: 384 } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
         );
 
         dispatch(setImage(result.assets[0].uri));

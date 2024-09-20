@@ -27,7 +27,7 @@ const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   if (!response.ok) {
     throw new Error(data.error || `HTTP error! status: ${response.status}`);
   }
-
+  console.log("API Response Data:", JSON.stringify(data, null, 2));
   return data;
 };
 
@@ -68,6 +68,45 @@ export const addPet = async (petData: any) => {
     };
   } catch (error) {
     console.error('Error adding pet:', error);
+    throw error;
+  }
+};
+
+export const updatePet = async (petData: any) => {
+  try {
+    const formData = new FormData();
+    formData.append('name', petData.name);
+    formData.append('breed', petData.breed);
+    formData.append('birthday', petData.birthday);
+
+    if (petData.newImage && petData.newImage !== petData.image) {
+      const fileInfo = await FileSystem.getInfoAsync(petData.newImage);
+      if (fileInfo.exists) {
+        formData.append('image', {
+          uri: petData.newImage,
+          name: 'pet_image.jpg',
+          type: 'image/jpeg'
+        } as any);
+      } else {
+        throw new Error('Image file does not exist');
+      }
+    }
+
+    const response = await apiClient(`/pets/update/${petData.id}`, {
+      method: 'PUT',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return {
+      pet: {
+        ...response.pet,
+        image_key: response.pet.image_key,
+      }
+    };
+  } catch (error) {
+    console.error('Error updating pet:', error);
     throw error;
   }
 };

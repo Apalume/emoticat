@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
-import { getPetDetails } from '@/src/api/catApi';
+import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
+import { useLocalSearchParams } from 'expo-router';
+import { fetchPetDetails } from '@/src/store/petSlice';
 import { useImageLoader } from '@/hooks/useImageLoader';
 import AllMoodsModal from './AllMoodsModal';
 import { MoodDetailItem } from './MoodDetailItem';
+import EditPetModal from './EditPetModal';
+
+import SettingsIcon from '@/assets/iconsSVGJS/SettingsIcon';
+
 
 const emotionColorMap = {
   "Content": "#FFE0CC", "Happy": "#FFDCE2", "Curious": "#D5F5C4", "Affectionate": "#D7FAFE",
@@ -20,37 +24,21 @@ const emotionEmojiMap = {
 };
 
 export default function PetHistory() {
-  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [pet, setPet] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { pets, status, error } = useAppSelector(state => state.pet);
   const [showAllMoods, setShowAllMoods] = useState(false);
-
-  const { imageUri, loading: imageLoading } = useImageLoader(pet?.image_key || null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   useEffect(() => {
-    const fetchPetDetails = async () => {
-      if (!id) {
-        setError('No pet ID provided');
-        setLoading(false);
-        return;
-      }
+    if (id) {
+      dispatch(fetchPetDetails(Number(id)));
+    }
+  }, [dispatch, id]);
 
-      try {
-        setLoading(true);
-        const petDetails = await getPetDetails(Number(id));
-        setPet(petDetails);
-      } catch (err) {
-        console.error('Error fetching pet details:', err);
-        setError('Failed to load pet details. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const pet = pets.find(p => p.id === Number(id));
 
-    fetchPetDetails();
-  }, [id]);
+  const { imageUri, loading: imageLoading } = useImageLoader(pet?.image_key || null);
 
   const calculateAge = (birthday: string) => {
     if (!birthday) return 'Unknown';
@@ -76,7 +64,7 @@ export default function PetHistory() {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   };
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <View className="flex-1 justify-center items-center">
         <Text className="text-white">Loading pet details...</Text>
@@ -84,13 +72,22 @@ export default function PetHistory() {
     );
   }
 
-  if (error) {
+  if (status === 'failed') {
     return (
       <View className="flex-1 justify-center items-center">
         <Text className="text-white">{error}</Text>
       </View>
     );
   }
+
+  if (!pet) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-white">Pet not found</Text>
+      </View>
+    );
+  }
+
 
   return (
     <SafeAreaView className="flex-1 bg-[#060606]">
@@ -102,26 +99,33 @@ export default function PetHistory() {
       </View>
 
       <ScrollView className="flex-1 px-4">
-        <View className="flex-row my-4 bg-[#1D1D1D] p-4 rounded-2xl">
-          {imageLoading ? (
-            <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
-              <Text className="text-white">Loading...</Text>
+        <View className="my-4 bg-[#1D1D1D] p-4 rounded-2xl">
+          <View className="flex-row justify-between items-start">
+            <View className="flex-row flex-1">
+              {imageLoading ? (
+                <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                  <Text className="text-white">Loading...</Text>
+                </View>
+              ) : imageUri ? (
+                <Image 
+                  source={{ uri: imageUri }} 
+                  className="w-20 h-20 rounded-2xl mr-4"
+                />
+              ) : (
+                <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                  <Text className="text-white">No Image</Text>
+                </View>
+              )}
+              <View className="flex-1">
+                <Text className="text-white text-xl font-bold">{pet.name}</Text>
+                <Text className="text-white">Age: {calculateAge(pet.birthday)}</Text>
+                <Text className="text-white">Breed: {pet.breed || 'Unknown'}</Text>
+                <Text className="text-white">Recent mood: {getRecentMood()}</Text>
+              </View>
             </View>
-          ) : imageUri ? (
-            <Image 
-              source={{ uri: imageUri }} 
-              className="w-20 h-20 rounded-2xl mr-4"
-            />
-          ) : (
-            <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
-              <Text className="text-white">No Image</Text>
-            </View>
-          )}
-          <View>
-            <Text className="text-white text-xl font-bold">{pet.name}</Text>
-            <Text className="text-white">Age: {calculateAge(pet.birthday)}</Text>
-            <Text className="text-white">Breed: {pet.breed || 'Unknown'}</Text>
-            <Text className="text-white">Recent mood: {getRecentMood()}</Text>
+            <TouchableOpacity onPress={() => setIsEditModalVisible(true)} className="ml-2 rounded-xl  p-2 bg-[#FFFC9F] ">
+              <SettingsIcon width={24} height={24} stroke="black" fill="transparent" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -195,6 +199,12 @@ export default function PetHistory() {
         visible={showAllMoods}
         onClose={() => setShowAllMoods(false)}
         moods={getTopMoods()}
+      />
+      <EditPetModal
+        visible={isEditModalVisible}
+        onClose={() => setIsEditModalVisible(false)}
+        pet={pet}
+        image={imageUri}
       />
     </SafeAreaView>
   );
