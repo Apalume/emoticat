@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch } from '@/src/store/hooks';
 import { View, Text, TextInput, TouchableOpacity, Platform, Image, TouchableWithoutFeedback, KeyboardAvoidingView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -30,6 +30,13 @@ export default function EditPetModal({ visible, onClose, pet, image }) {
   const [breed, setBreed] = useState(pet.breed);
   const [newImage, setNewImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const hasChanges = useMemo(() => {
+    return name !== pet.name ||
+           birthday.toISOString() !== new Date(pet.birthday).toISOString() ||
+           breed !== pet.breed ||
+           newImage !== null;
+  }, [name, birthday, breed, newImage, pet]);
 
   useEffect(() => {
     setName(pet.name);
@@ -188,16 +195,17 @@ export default function EditPetModal({ visible, onClose, pet, image }) {
 
               <View className="flex flex-row">
                 <TouchableOpacity
-                  className="bg-[#FFFC9F] p-4 rounded-2xl flex-grow mr-2"
+                  className={`${hasChanges ? 'bg-[#FFFC9F]' : 'bg-[#272727]'} p-4 rounded-2xl flex-grow mr-2`}
                   onPress={handleSave}
+                  disabled={!hasChanges}
                 >
-                  <Text className="text-black text-center font-bold">Save Changes</Text>
+                  <Text className={`${hasChanges ? `text-black `: `text-gray-500` } text-center`}>Save Changes</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="border border-[#FFFC9F] p-4 rounded-2xl"
                   onPress={handleClose}
                 >
-                  <Text className="text-white text-center">Cancel</Text>
+                  <Text className="text-[#FFFC9F] text-center">Cancel</Text>
                 </TouchableOpacity>
               </View>
 

@@ -242,14 +242,9 @@ export const getPetImageData = async (imageKey: string): Promise<string> => {
     // Check if the image is cached
     const cachedPath = await AsyncStorage.getItem(cacheKey);
     if (cachedPath && await FileSystem.getInfoAsync(cachedPath).then(info => info.exists)) {
-      console.log('Returning cached image:', cachedPath);
       return cachedPath;
     }
-
-    console.log('Fetching image from server for key:', imageKey);
     const token = await AsyncStorage.getItem('userToken');
-    console.log('User token:', token ? 'Present' : 'Missing');
-
     // If not cached, fetch from server
     const response = await fetch(`${API_URL}/pets/image/${encodeURIComponent(imageKey)}`, {
       method: 'GET',

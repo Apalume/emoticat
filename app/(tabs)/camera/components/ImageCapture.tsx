@@ -92,52 +92,55 @@ export default function ImageCapture() {
   return (
     <View className="flex-1 items-center justify-between p-4">
       <View className="items-center w-full">
-        {selectedPet && (
-          <>
-            <Text className="text-white text-xl mb-4">Selected Pet</Text>
-            <View className="p-4 rounded-2xl flex flex-row items-center w-full bg-[#272727] mb-4">
-              {loading ? (
-                <View className="w-32 h-32 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
-                  <Text className="text-white">Loading...</Text>
-                </View>
-              ) : imageUri ? (
-                <Image
-                  source={{ uri: imageUri }}
-                  className="w-32 h-32 rounded-2xl mr-4"
-                />
-              ) : (
-                <View className="w-32 h-32 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
-                  <Text className="text-white">No Image</Text>
-                </View>
-              )}
-              <View>
-                <Text className="font-bold text-lg text-white">{selectedPet.name}</Text>
-                <Text className="text-white">Age: {calculateAge(selectedPet.birthday)}</Text>
-                <Text className="text-white">Breed: {selectedPet.breed || 'Unknown'}</Text>
-                <Text className="text-white">Recent mood: {getRecentMood(selectedPet)}</Text>
+      {selectedPet && (
+        <>
+          <Text className="text-white text-xl mb-4">Selected Pet</Text>
+          <View className="p-4 rounded-2xl flex flex-row items-center w-[90vw] bg-[#FFFC9F] mb-4">
+            {loading ? (
+              <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                <Text className="text-white">Loading...</Text>
               </View>
+            ) : imageUri ? (
+              <Image
+                source={{ uri: imageUri }}
+                className="w-20 h-20 rounded-2xl mr-4"
+              />
+            ) : (
+              <View className="w-20 h-20 rounded-2xl mr-4 bg-gray-600 justify-center items-center">
+                <Text className="text-white">No Image</Text>
+              </View>
+            )}
+            <View>
+              <Text className="text-xl font-bold text-black">{selectedPet.name}</Text>
+              <Text className="text-black">Age: {calculateAge(selectedPet.birthday)}</Text>
+              <Text className="text-black">Breed: {selectedPet.breed || 'Unknown'}</Text>
+              <Text className="text-black">Recent mood: {getRecentMood(selectedPet)}</Text>
             </View>
-          </>
-        )}
+          </View>
+        </>
+      )}
          {error && (
           <View className="bg-red-500 p-4 rounded-lg mb-4 w-full">
             <Text className="text-white text-center">{error}</Text>
           </View>
         )}
+      </View>
+
+      <View className={`flex flex-row text-center items-center justify-center flex-grow gap-4`}>
         <TouchableOpacity 
-          className="bg-[#FBF79C] py-3 px-5 rounded-lg mb-4"
+          className="bg-[#FBF79C] py-5 px-5 rounded-2xl"
           onPress={() => handleImageSelection('camera')}
         >
           <Text className="text-black font-bold">Take a picture</Text>
         </TouchableOpacity>
-        <Text className="text-white mb-4">OR</Text>
+        <Text className="text-white">OR</Text>
         <TouchableOpacity 
-          className="bg-[#FBF79C] py-3 px-5 rounded-lg"
+          className="bg-[#FBF79C] py-5 px-5 rounded-2xl"
           onPress={() => handleImageSelection('library')}
         >
           <Text className="text-black font-bold">Choose from library</Text>
         </TouchableOpacity>
-      </View>
+        </View>
       
       <TouchableOpacity 
         className="border border-[#FBF79C] py-4 rounded-2xl w-full"

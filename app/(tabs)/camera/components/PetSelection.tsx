@@ -39,14 +39,14 @@ export default function PetSelection() {
     <View className="p-4 rounded-2xl mb-4 w-full flex-grow">
       <Text className="text-white text-lg mb-2 text-center">Select a pet to continue</Text>
       <ScrollView>
-        <View className="flex-row flex-wrap px-2">
+        <View className="flex-row flex-wrap">
           {pets.map((pet) => {
             const { imageUri, loading } = useImageLoader(pet.image_key);
             const isSelected = selectedPetId === pet.id;
             return (
               <TouchableOpacity 
                 key={pet.id}
-                className={`p-4 rounded-2xl m-1 flex flex-row items-center w-full ${isSelected ? 'bg-[#FFFC9F]' : 'bg-[#272727]'}`}
+                className={`p-4 rounded-2xl m-1 flex flex-row items-center w-[90vw] ${isSelected ? 'bg-[#FFFC9F]' : 'bg-[#272727]'}`}
                 onPress={() => handleSelectPet(pet.id)}
               >
                 {loading ? (

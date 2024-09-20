@@ -18,6 +18,9 @@ export default function ModalScreen({ visible, onClose }) {
   const [image, setImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const isFormValid = name.trim() !== '' && image !== null;
+
+
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || birthday;
     setBirthday(currentDate);
@@ -157,16 +160,23 @@ export default function ModalScreen({ visible, onClose }) {
 
               <View className="flex flex-row">
                 <TouchableOpacity
-                  className="bg-[#FFFC9F] p-4 rounded-2xl flex-grow mr-2"
+                  className={`p-4 rounded-2xl flex-grow mr-2 ${
+                    isFormValid ? 'bg-[#FFFC9F]' : 'bg-[#272727]'
+                  }`}
                   onPress={handleSave}
+                  disabled={!isFormValid}
                 >
-                  <Text className="text-black text-center font-bold">Save</Text>
+                  <Text className={`text-center font-bold ${
+                    isFormValid ? 'text-black' : 'text-gray-500'
+                  }`}>
+                    Save
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="border border-[#FFFC9F] p-4 rounded-2xl"
                   onPress={() => onClose()}
                 >
-                  <Text className="text-white text-center">Cancel</Text>
+                  <Text className="text-[#FFFC9F] text-center">Cancel</Text>
                 </TouchableOpacity>
               </View>
 
