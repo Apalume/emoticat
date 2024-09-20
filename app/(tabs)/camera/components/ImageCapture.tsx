@@ -18,47 +18,36 @@ export default function ImageCapture() {
 
   const { imageUri, loading } = useImageLoader(selectedPet?.image_key || null);
 
-  const compressAndResizeImage = async (uri: string) => {
-    const manipulatedImage = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: 512, height: 512 } }],
-      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-    );
-    return manipulatedImage.base64;
-  };
-
   const handleImageSelection = async (type: 'camera' | 'library') => {
     setError(null);
-    let result;
-    if (type === 'camera') {
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-    } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-    }
+    const options = {
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    };
+
+    const result = type === 'camera' 
+      ? await ImagePicker.launchCameraAsync(options)
+      : await ImagePicker.launchImageLibraryAsync(options);
   
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
       setAnalyzing(true);
-      dispatch(setImage(result.assets[0].uri));
-      const compressedImage = await compressAndResizeImage(result.assets[0].uri);
       try {
-        if (selectedPet === null) {
-          throw new Error('No pet selected');
-        }
-        console.log(`before dispatch`)
-        await dispatch(analyzeImage({ image: compressedImage, petId: selectedPetId }));
-        if (!analysisResult || analysisResult.emotion.startsWith('ERROR:')) {
-          throw new Error(analysisResult?.emotion || 'Analysis failed');
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [{ resize: { width: 512, height: 512 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        );
+
+        dispatch(setImage(result.assets[0].uri));
+        const analysisResult = await dispatch(analyzeImage({ 
+          image: manipulatedImage.base64, 
+          petId: selectedPetId 
+        })).unwrap();
+
+        if (!analysisResult || analysisResult.message.startsWith('ERROR:')) {
+          throw new Error(analysisResult?.message || 'Analysis failed');
         }
         dispatch(setStage('analysisResult'));
       } catch (err) {

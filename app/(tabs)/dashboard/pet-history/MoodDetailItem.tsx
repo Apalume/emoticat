@@ -19,7 +19,6 @@ export const MoodDetailItem: React.FC<MoodDetailItemProps> = ({
 }) => {
   const { imageUri, loading } = useImageLoader(imageKey || '');
 
-  console.log(imageKey)
   if (count === 0) return null;
 
   return (

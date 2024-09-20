@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { analyzeCat, getEmotionDetails } from '../api/catApi';
+import { analyzeCat } from '../api/catApi';
 import { getEmotionEmoji } from '../utils/emotionUtils';
 
 interface CameraFlowState {
@@ -28,14 +28,20 @@ export const analyzeImage = createAsyncThunk(
     dispatch(setAnalyzing(true));
     dispatch(setAnalysisTimestamp(new Date().toISOString()));
     try {
-      console.log(`in analyzeImage for ${petId}`)
+      console.log(`in analyzeImage for ${petId}`);
       if (petId === undefined) {
         throw new Error('No pet selected');
       }
       const data = await analyzeCat(image, petId);
+      console.log('API response:', data); // Add this log
       if (!data.message.startsWith('ERROR:')) {
-        const emotionDetails = await getEmotionDetails(data.message);
-        return { analysisResult: data, emotionDetails };
+        return { 
+          analysisResult: { 
+            emotion: data.message, 
+            image_key: data.imageKey
+          }, 
+          emotionDetails: data.emotionDetails
+        };
       }
       return rejectWithValue(data.message);
     } catch (error) {
@@ -83,10 +89,11 @@ const cameraFlowSlice = createSlice({
       })
       .addCase(analyzeImage.fulfilled, (state, action) => {
         state.analyzing = false;
+        console.log('Reducer received:', action.payload); // Add this log
         const { analysisResult, emotionDetails } = action.payload;
         state.analysisResult = {
-          emotion: analysisResult.message,
-          emoji: getEmotionEmoji(analysisResult.message),
+          emotion: analysisResult.emotion,
+          emoji: getEmotionEmoji(analysisResult.emotion),
         };
         state.emotionDetails = emotionDetails;
         state.stage = 'analysisResult';

@@ -72,32 +72,32 @@ export const addPet = async (petData: any) => {
   }
 };
 
-export const analyzeCat = async (base64Image: string, petId: number | undefined) => {
+export const analyzeCat = async (base64Image: string, petId: number) => {
   try {
-    if (!base64Image) {
-      throw new Error('Image is required');
-    }
-    if (petId === undefined) {
-      throw new Error('Pet ID is required');
-    }
-    return await apiClient('/cats/analyze', {
+    const formData = new FormData();
+    formData.append('image', {
+      uri: `data:image/jpeg;base64,${base64Image}`,
+      type: 'image/jpeg',
+      name: 'cat_image.jpg',
+    } as any);
+    formData.append('petId', petId.toString());
+
+    const response = await apiClient('/cats/analyze', {
       method: 'POST',
-      body: JSON.stringify({ image: base64Image, petId }),
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
+
+    // The response now includes both the emotion and the emotion details
+    return {
+      message: response.message,
+      emotionDetails: response.emotionDetails,
+      imageKey: response.imageKey
+    };
   } catch (error) {
     console.error('Error analyzing cat:', error);
-    throw error;
-  }
-};
-
-export const getEmotionDetails = async (emotion: string) => {
-  try {
-    return await apiClient('/cats/get-emotion-details', {
-      method: 'POST',
-      body: JSON.stringify({ emotion }),
-    });
-  } catch (error) {
-    console.error('Error getting emotion details:', error);
     throw error;
   }
 };
@@ -203,19 +203,26 @@ export const getPetImageData = async (imageKey: string): Promise<string> => {
     // Check if the image is cached
     const cachedPath = await AsyncStorage.getItem(cacheKey);
     if (cachedPath && await FileSystem.getInfoAsync(cachedPath).then(info => info.exists)) {
+      console.log('Returning cached image:', cachedPath);
       return cachedPath;
     }
+
+    console.log('Fetching image from server for key:', imageKey);
+    const token = await AsyncStorage.getItem('userToken');
+    console.log('User token:', token ? 'Present' : 'Missing');
 
     // If not cached, fetch from server
     const response = await fetch(`${API_URL}/pets/image/${encodeURIComponent(imageKey)}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${await AsyncStorage.getItem('userToken')}`,
+        'Authorization': `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorBody = await response.text();
+      console.error('Full error response:', errorBody);
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
     }
 
     const blob = await response.blob();
@@ -242,6 +249,7 @@ export const getPetImageData = async (imageKey: string): Promise<string> => {
             
             await FileSystem.writeAsStringAsync(filePath, base64Data, { encoding: FileSystem.EncodingType.Base64 });
             await AsyncStorage.setItem(cacheKey, filePath);
+            console.log('Successfully cached image at:', filePath);
             resolve(filePath);
           } catch (writeError) {
             console.error('Error writing file:', writeError);
@@ -256,7 +264,8 @@ export const getPetImageData = async (imageKey: string): Promise<string> => {
     });
   } catch (error) {
     console.error('Error fetching image data:', error);
-    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+    // Instead of returning a placeholder, we'll throw the error
+    throw error;
   }
 };
 
